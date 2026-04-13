@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Insight — Transactions</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <nav>
+    <span class="logo">💰 Finance Insight</span>
+    <a href="/">Upload</a>
+    <a href="/transactions" class="active">Transactions</a>
+    <a href="/dashboard">Dashboard</a>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>All Transactions</h1>
+      <div class="header-actions">
+        <select id="catFilter"><option value="">All Categories</option></select>
+        <a href="/api/download" class="btn-outline">⬇ Download CSV</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="loadingMsg" class="loading">Loading transactions…</div>
+      <div id="tableWrap" class="table-wrap hidden">
+        <table id="txTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Date</th><th>Description</th>
+              <th>Amount (₹)</th><th>Type</th><th>Category</th>
+            </tr>
+          </thead>
+          <tbody id="txBody"></tbody>
+        </table>
+      </div>
+      <p id="emptyMsg" class="empty-msg hidden">No transactions found. <a href="/">Upload a CSV first.</a></p>
+    </div>
+  </main>
+
+  <script>
+    const catFilter = document.getElementById('catFilter');
+    const txBody    = document.getElementById('txBody');
+    const tableWrap = document.getElementById('tableWrap');
+    const loadingMsg= document.getElementById('loadingMsg');
+    const emptyMsg  = document.getElementById('emptyMsg');
+
+    async function loadCategories() {
+      const cats = await fetch('/api/categories').then(r => r.json());
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        catFilter.appendChild(opt);
+      });
+    }
+
+    async function loadTransactions(cat = '') {
+      loadingMsg.classList.remove('hidden');
+      tableWrap.classList.add('hidden');
+      emptyMsg.classList.add('hidden');
+
+      const url  = cat ? `/api/transactions?category=${encodeURIComponent(cat)}` : '/api/transactions';
+      const rows = await fetch(url).then(r => r.json());
+
+      loadingMsg.classList.add('hidden');
+      if (!rows.length) { emptyMsg.classList.remove('hidden'); return; }
+
+      txBody.innerHTML = rows.map((r, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${r.date}</td>
+          <td class="desc">${r.description}</td>
+          <td class="${r.type === 'credit' ? 'credit' : 'debit'}">
+            ${r.type === 'credit' ? '+' : '-'}₹${Math.abs(r.amount).toLocaleString('en-IN')}
+          </td>
+          <td><span class="badge ${r.type}">${r.type}</span></td>
+          <td><span class="cat-tag">${r.category}</span></td>
+        </tr>
+      `).join('');
+      tableWrap.classList.remove('hidden');
+    }
+
+    catFilter.addEventListener('change', () => loadTransactions(catFilter.value));
+
+    (async () => {
+      await loadCategories();
+      await loadTransactions();
+    })();
+  </script>
+</body>
+</html>

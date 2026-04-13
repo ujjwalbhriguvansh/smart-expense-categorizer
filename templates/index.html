@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Insight — Upload</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <nav>
+    <span class="logo">💰 Finance Insight</span>
+    <a href="/">Upload</a>
+    <a href="/transactions">Transactions</a>
+    <a href="/dashboard">Dashboard</a>
+  </nav>
+
+  <main class="container">
+    <div class="card center">
+      <h1>Upload Bank Statement</h1>
+      <p class="subtitle">Upload your CSV file — we'll categorise every transaction automatically.</p>
+
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📂</div>
+        <p>Drag & drop your CSV here, or</p>
+        <label class="btn-primary" for="fileInput">Browse File</label>
+        <input type="file" id="fileInput" accept=".csv" hidden />
+        <p id="fileName" class="file-name"></p>
+      </div>
+
+      <div class="csv-hint">
+        <strong>Required CSV columns:</strong> date, description, amount, type (debit/credit)
+      </div>
+
+      <button class="btn-primary full" id="uploadBtn" disabled>Upload & Categorise</button>
+      <div id="statusMsg" class="status-msg"></div>
+    </div>
+
+    <div class="card sample-card">
+      <h2>Sample CSV Format</h2>
+      <table>
+        <thead><tr><th>date</th><th>description</th><th>amount</th><th>type</th></tr></thead>
+        <tbody>
+          <tr><td>2024-01-01</td><td>SALARY JANUARY</td><td>50000</td><td>credit</td></tr>
+          <tr><td>2024-01-03</td><td>SWIGGY ORDER 45821</td><td>-320</td><td>debit</td></tr>
+          <tr><td>2024-01-05</td><td>OLA CAB 88721</td><td>-150</td><td>debit</td></tr>
+          <tr><td>2024-01-07</td><td>NETFLIX SUBSCRIPTION</td><td>-649</td><td>debit</td></tr>
+          <tr><td>2024-01-10</td><td>ELECTRICITY BILL</td><td>-1200</td><td>debit</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const dropZone  = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileNameEl= document.getElementById('fileName');
+    const statusMsg = document.getElementById('statusMsg');
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', ()=> dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.classList.remove('drag-over');
+      setFile(e.dataTransfer.files[0]);
+    });
+
+    function setFile(file) {
+      if (!file) return;
+      selectedFile = file;
+      fileNameEl.textContent = '📄 ' + file.name;
+      uploadBtn.disabled = false;
+    }
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      uploadBtn.disabled = true;
+      statusMsg.className = 'status-msg';
+      statusMsg.textContent = '⏳ Uploading and categorising…';
+
+      const form = new FormData();
+      form.append('file', selectedFile);
+
+      try {
+        const res  = await fetch('/api/upload', { method: 'POST', body: form });
+        const data = await res.json();
+        if (res.ok) {
+          statusMsg.className = 'status-msg success';
+          statusMsg.innerHTML = `✅ Done! <strong>${data.rows}</strong> transactions categorised.
+            <br/><a href="/transactions">View Transactions →</a>`;
+        } else {
+          statusMsg.className = 'status-msg error';
+          statusMsg.textContent = '❌ ' + (data.error || 'Upload failed.');
+          uploadBtn.disabled = false;
+        }
+      } catch {
+        statusMsg.className = 'status-msg error';
+        statusMsg.textContent = '❌ Network error. Is the server running?';
+        uploadBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
