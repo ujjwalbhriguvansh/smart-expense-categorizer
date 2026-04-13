@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
+  <!-- Shared top navigation -->
   <nav>
     <span class="logo">💰 Finance Insight</span>
     <a href="/">Upload</a>
@@ -14,6 +15,7 @@
     <a href="/dashboard">Dashboard</a>
   </nav>
 
+  <!-- Upload workflow: select CSV, submit, and show status -->
   <main class="container">
     <div class="card center">
       <h1>Upload Bank Statement</h1>
@@ -27,6 +29,7 @@
         <p id="fileName" class="file-name"></p>
       </div>
 
+      <!-- Quick schema hint so users upload valid CSV columns -->
       <div class="csv-hint">
         <strong>Required CSV columns:</strong> date, description, amount, type (debit/credit)
       </div>
@@ -51,6 +54,7 @@
   </main>
 
   <script>
+    // DOM references used by upload interactions
     const dropZone  = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -67,6 +71,7 @@
       setFile(e.dataTransfer.files[0]);
     });
 
+    // Stores selected file and enables upload button
     function setFile(file) {
       if (!file) return;
       selectedFile = file;
@@ -84,6 +89,7 @@
       form.append('file', selectedFile);
 
       try {
+        // Sends CSV to backend for parse + categorize + save
         const res  = await fetch('/api/upload', { method: 'POST', body: form });
         const data = await res.json();
         if (res.ok) {

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
+  <!-- Shared top navigation -->
   <nav>
     <span class="logo">💰 Finance Insight</span>
     <a href="/">Upload</a>
@@ -15,6 +16,7 @@
   </nav>
 
   <main class="container">
+    <!-- Header actions: filter by category and export CSV -->
     <div class="page-header">
       <h1>All Transactions</h1>
       <div class="header-actions">
@@ -24,6 +26,7 @@
     </div>
 
     <div class="card">
+      <!-- Loading/empty/table states are toggled in JS -->
       <div id="loadingMsg" class="loading">Loading transactions…</div>
       <div id="tableWrap" class="table-wrap hidden">
         <table id="txTable">
@@ -41,12 +44,14 @@
   </main>
 
   <script>
+    // DOM references for filter and table rendering
     const catFilter = document.getElementById('catFilter');
     const txBody    = document.getElementById('txBody');
     const tableWrap = document.getElementById('tableWrap');
     const loadingMsg= document.getElementById('loadingMsg');
     const emptyMsg  = document.getElementById('emptyMsg');
 
+    // Loads category options for filter dropdown
     async function loadCategories() {
       const cats = await fetch('/api/categories').then(r => r.json());
       cats.forEach(c => {
@@ -56,6 +61,7 @@
       });
     }
 
+    // Fetches transactions (optionally filtered) and updates table state
     async function loadTransactions(cat = '') {
       loadingMsg.classList.remove('hidden');
       tableWrap.classList.add('hidden');
@@ -67,6 +73,7 @@
       loadingMsg.classList.add('hidden');
       if (!rows.length) { emptyMsg.classList.remove('hidden'); return; }
 
+      // Render rows with amount/type/category visual formatting
       txBody.innerHTML = rows.map((r, i) => `
         <tr>
           <td>${i+1}</td>
@@ -84,6 +91,7 @@
 
     catFilter.addEventListener('change', () => loadTransactions(catFilter.value));
 
+    // Initial page load sequence
     (async () => {
       await loadCategories();
       await loadTransactions();

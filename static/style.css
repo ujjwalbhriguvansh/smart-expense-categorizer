@@ -3,6 +3,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* Theme tokens shared by all pages */
   --bg:        #0f172a;
   --surface:   #1e293b;
   --border:    #334155;
@@ -17,6 +18,7 @@
 }
 
 body {
+  /* Global typography and app background */
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -168,6 +170,7 @@ select {
 
 /* ── Charts grid ─────────────────────────────────────── */
 .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* Stack dashboard charts on narrow screens */
 @media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } }
 
 /* ── Misc ────────────────────────────────────────────── */
